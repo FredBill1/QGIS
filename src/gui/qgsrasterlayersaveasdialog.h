@@ -126,6 +126,7 @@ class GUI_EXPORT QgsRasterLayerSaveAsDialog: public QDialog, private Ui::QgsRast
     void mOriginalResolutionPushButton_clicked() { setOriginalResolution(); }
     void mXResolutionLineEdit_textEdited( const QString & ) { mResolutionState = UserResolution; recalcSize(); }
     void mYResolutionLineEdit_textEdited( const QString & ) { mResolutionState = UserResolution; recalcSize(); }
+    void mCalcResolutionFromLevelButton_clicked() { calcResolutionFromLevel(); }
 
     void mOriginalSizePushButton_clicked() { setOriginalSize(); }
     void mColumnsLineEdit_textEdited( const QString & ) { mResolutionState = UserResolution; recalcResolution(); }
@@ -162,6 +163,7 @@ class GUI_EXPORT QgsRasterLayerSaveAsDialog: public QDialog, private Ui::QgsRast
     void recalcResolution();
     void updateResolutionStateMsg();
     void recalcResolutionSize();
+    void calcResolutionFromLevel();
 
     void addNoDataRow( double min, double max );
     void setNoDataToEdited( int row );

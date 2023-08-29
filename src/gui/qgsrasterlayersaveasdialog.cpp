@@ -22,6 +22,7 @@
 #include "qgsrasterformatsaveoptionswidget.h"
 #include "qgsrasterrenderer.h"
 #include "qgsrastertransparency.h"
+#include "qgsrectangle.h"
 #include "qgssettings.h"
 #include "qgsrasterfilewriter.h"
 #include "qgsvectorlayer.h"
@@ -64,6 +65,7 @@ QgsRasterLayerSaveAsDialog::QgsRasterLayerSaveAsDialog( QgsRasterLayer *rasterLa
   connect( mRemoveAllNoDataToolButton, &QPushButton::clicked, this, &QgsRasterLayerSaveAsDialog::mRemoveAllNoDataToolButton_clicked );
   connect( mTileModeCheckBox, &QCheckBox::toggled, this, &QgsRasterLayerSaveAsDialog::mTileModeCheckBox_toggled );
   connect( mPyramidsGroupBox, &QgsCollapsibleGroupBox::toggled, this, &QgsRasterLayerSaveAsDialog::mPyramidsGroupBox_toggled );
+  connect( mCalcResolutionFromLevelButton, &QPushButton::clicked, this, &QgsRasterLayerSaveAsDialog::mCalcResolutionFromLevelButton_clicked );
   mAddNoDataManuallyToolButton->setIcon( QgsApplication::getThemeIcon( QStringLiteral( "/symbologyAdd.svg" ) ) );
   mLoadTransparentNoDataToolButton->setIcon( QgsApplication::getThemeIcon( QStringLiteral( "/mActionFileOpen.svg" ) ) );
   mRemoveSelectedNoDataToolButton->setIcon( QgsApplication::getThemeIcon( QStringLiteral( "/symbologyRemove.svg" ) ) );
@@ -182,6 +184,9 @@ QgsRasterLayerSaveAsDialog::QgsRasterLayerSaveAsDialog( QgsRasterLayer *rasterLa
   connect( mExtentGroupBox, &QgsExtentGroupBox::extentChanged, this, &QgsRasterLayerSaveAsDialog::extentChanged );
 
   recalcResolutionSize();
+
+  for ( int i = 1; i <= 21; ++i )
+    mCalcResolutionFromLevelComboBox->addItem( QString::number( i ) );
 
   QgsSettings settings;
 
@@ -577,6 +582,19 @@ void QgsRasterLayerSaveAsDialog::recalcResolution()
   mXResolutionLineEdit->setText( QLocale().toString( xRes ) );
   mYResolutionLineEdit->setText( QLocale().toString( yRes ) );
   updateResolutionStateMsg();
+}
+
+void QgsRasterLayerSaveAsDialog::calcResolutionFromLevel()
+{
+  int level = mCalcResolutionFromLevelComboBox->currentText().toInt();
+  int zoom = 1 << ( level - 1 ); // level is always less than 31, this should never overflow.
+  auto crs = QgsCoordinateReferenceSystem::fromEpsgId( 3857 );
+  constexpr double maximum = 40075016.6856;
+  double res = maximum / zoom;
+  setResolution( res, res, crs );
+  mYResolutionLineEdit->setText( mXResolutionLineEdit->text() );  // manually make them equal
+  mResolutionState = UserResolution;
+  recalcSize();
 }
 
 void QgsRasterLayerSaveAsDialog::recalcResolutionSize()
